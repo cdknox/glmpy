@@ -69,7 +69,7 @@ class GLM:
             params = linalg.solve_triangular(
                 R[:to_keep], np.matmul(Q.T, z * w)[:to_keep]
             )
-            params = params[P]
+            params = params[np.argsort(P)]
             eta = np.matmul(X, params).reshape(-1)
             mu = link.link_inverse(eta + offset).reshape(-1)
             deviance = np.sum(family.deviance_residuals(y, mu, weights))
@@ -90,4 +90,4 @@ class GLM:
             raise ValueError("failed to converge")
 
         self.P = P
-        self.params = params
+        self.params = params.reshape(-1)
