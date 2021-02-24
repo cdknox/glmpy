@@ -25,7 +25,7 @@ class GLM:
         weights=None,
         offset=None,
         max_iter=25,
-        epsilon=10 * np.finfo(np.float64).eps,
+        epsilon=1e-8,
     ):
 
         family = self.family

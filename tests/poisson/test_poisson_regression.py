@@ -1,15 +1,24 @@
 import numpy as np
 import pandas as pd
+import pytest
 
+import glmpy.links
 import glmpy.model
 
 
-def test_simple_fit():
-    # df = pd.read_csv('poisson_data_basic.csv')
+@pytest.mark.parametrize(
+    "link_obj,link_suffix",
+    [
+        (glmpy.links.LogLink, ""),
+        (glmpy.links.IdentityLink, "_identity"),
+        (glmpy.links.SqrtLink, "_sqrt"),
+    ],
+)
+def test_simple_fit(link_obj, link_suffix):
     df = pd.read_csv("tests/poisson/poisson_data_basic.csv")
     df["intercept"] = 1
 
-    link = glmpy.links.LogLink
+    link = link_obj
     glm = glmpy.model.GLM(family=glmpy.families.Poisson, link=link)
     glm.fit(
         X=df[["intercept", "x_00", "x_01", "x_02", "x_03"]].values, y=df["y"].values
@@ -26,14 +35,9 @@ def test_simple_fit():
             "values": glm.params,
         }
     )
-    # r_params = pd.read_csv('poisson_data_basic_coeff_r.csv')
-    r_params = pd.read_csv("tests/poisson/poisson_data_basic_coeff_r.csv")
+    r_params = pd.read_csv(f"tests/poisson/poisson_data_basic_coeff_r{link_suffix}.csv")
     r_params.columns = ["names", "values"]
 
-    print(python_params)
-    print(r_params)
-    # assert True
-    # assert (python_params == r_params).all().all()
     assert np.allclose(
         r_params.set_index("names")["values"]
         - python_params.set_index("names")["values"],
