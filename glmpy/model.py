@@ -89,5 +89,6 @@ class GLM:
         if not converged:
             raise ValueError("failed to converge")
 
+        self.deviance = deviance
         self.P = P
         self.params = params.reshape(-1)
