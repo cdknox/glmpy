@@ -1,5 +1,5 @@
 import numpy as np
-from scipy import linalg
+from scipy import linalg, stats
 
 import glmpy.families
 import glmpy.links
@@ -89,6 +89,62 @@ class GLM:
         if not converged:
             raise ValueError("failed to converge")
 
+        self.rank = to_keep
+        self.n_ok = X.shape[0] - np.sum(weights == 0)
         self.deviance = deviance
         self.P = P
         self.params = params.reshape(-1)
+        self.residual_dof = self.n_ok - self.rank
+
+        self.handle_dispersion_parameter(y, mu, weights)
+        self.calculate_vcov(R, P)
+        self.calculate_p_values()
+
+    def handle_dispersion_parameter(self, y, mu, weights):
+        estimated_dispersion = False
+
+        no_dispersion_families = [
+            glmpy.families.Poisson,
+            glmpy.families.Binomial,
+        ]
+        family_in_no_dispersion = any(
+            [isinstance(self.family, family) for family in no_dispersion_families]
+        )
+        if family_in_no_dispersion:
+            dispersion = 1
+        elif self.residual_dof:
+            estimated_dispersion = True
+            residuals = y - mu
+            numerator = np.sum((weights * residuals * residuals)[weights > 0])
+            dispersion = numerator / self.residual_dof
+        else:
+            estimated_dispersion = True
+            dispersion = np.NaN
+
+        self.estimated_dispersion = estimated_dispersion
+        self.dispersion = dispersion
+
+    def calculate_vcov(self, R, P):
+        # TODO address when rank isn't full / aliasing happens
+        undo = np.argsort(P)
+        # rows/columns now also in order in which originally passed
+        covmat_unscaled = np.linalg.inv(np.matmul(R.T, R))[undo, :][:, undo]
+        covmat = self.dispersion * covmat_unscaled
+        var_coef = np.diag(covmat)
+        standard_error = np.sqrt(var_coef)
+
+        self.covmat_unscaled = covmat_unscaled
+        self.covmat = covmat
+        self.var_coef = var_coef
+        self.standard_error = standard_error
+
+    def calculate_p_values(self):
+        t_values = self.params / self.standard_error
+        if not self.estimated_dispersion:
+            p_values = 2 * stats.norm.cdf(-np.abs(t_values))
+        elif self.residual_dof:
+            p_values = 2 * stats.t.cdf(-np.abs(t_values), df=self.residual_dof)
+        else:
+            p_values = np.array([np.NaN] * len(self.params))
+        self.p_values = p_values
+        self.t_values = t_values

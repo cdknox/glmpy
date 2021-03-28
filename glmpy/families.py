@@ -62,3 +62,7 @@ class Gaussian:
 
     def mu_start_from_y(self, y):
         return y
+
+
+class Binomial:
+    pass
