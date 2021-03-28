@@ -30,3 +30,8 @@ class Poisson:
 
     def mu_start_from_y(self, y):
         return y + 0.1
+
+
+class QuasiPoisson(Poisson):
+    def aic(self, y, n, mu, weight, total_deviance):
+        return np.NaN
