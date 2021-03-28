@@ -9,17 +9,17 @@ import glmpy.model
 @pytest.mark.parametrize(
     "link_obj,link_suffix",
     [
-        (glmpy.links.LogLink, ""),
-        (glmpy.links.IdentityLink, "_identity"),
-        (glmpy.links.SqrtLink, "_sqrt"),
+        (glmpy.links.IdentityLink, ""),
+        (glmpy.links.LogLink, "_log"),
+        (glmpy.links.InverseLink, "_inverse"),
     ],
 )
 def test_simple_fit(link_obj, link_suffix):
-    df = pd.read_csv("tests/quasipoisson/quasipoisson_data_basic.csv")
+    df = pd.read_csv("tests/gaussian/gaussian_data_basic.csv")
     df["intercept"] = 1
 
     link = link_obj
-    glm = glmpy.model.GLM(family=glmpy.families.QuasiPoisson, link=link)
+    glm = glmpy.model.GLM(family=glmpy.families.Gaussian, link=link)
     glm.fit(
         X=df[["intercept", "x_00", "x_01", "x_02", "x_03"]].values, y=df["y"].values
     )
@@ -36,7 +36,7 @@ def test_simple_fit(link_obj, link_suffix):
         }
     )
     r_params = pd.read_csv(
-        f"tests/quasipoisson/quasipoisson_data_basic_coeff_r{link_suffix}.csv"
+        f"tests/gaussian/gaussian_data_basic_coeff_r{link_suffix}.csv"
     )
     r_params.columns = ["names", "values"]
 

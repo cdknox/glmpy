@@ -35,3 +35,30 @@ class Poisson:
 class QuasiPoisson(Poisson):
     def aic(self, y, n, mu, weight, total_deviance):
         return np.NaN
+
+
+class Gaussian:
+    allowed_links = [
+        glmpy.links.IdentityLink,
+        glmpy.links.InverseLink,
+        glmpy.links.LogLink,
+    ]
+
+    def variance(self, mu):
+        return np.ones(mu.shape[0])
+
+    def valid_mu(self, mu):
+        return np.array([True] * mu.shape[0])
+
+    def deviance_residuals(self, y, mu, weight):
+        return weight * (y - mu) * (y - mu)
+
+    def aic(self, y, n, mu, weight, total_deviance):
+        return (
+            n * (np.log(2 * np.pi * total_deviance / n) + 1)
+            + 2
+            - np.sum(np.log(weight))
+        )
+
+    def mu_start_from_y(self, y):
+        return y

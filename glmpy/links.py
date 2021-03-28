@@ -93,7 +93,7 @@ class SqrtLink:
         return np.isfinite(eta) & (eta > 0.0)
 
 
-class OneOverMuSqauredLink:
+class OneOverMuSquaredLink:
     def link_function(self, mu):
         return 1 / (mu * mu)
 
@@ -107,7 +107,7 @@ class OneOverMuSqauredLink:
         return np.isfinite(eta) & (eta > 0.0)
 
 
-class OneOverMuLink:
+class InverseLink:
     def link_function(self, mu):
         return 1 / mu
 
